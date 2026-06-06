@@ -1,8 +1,6 @@
 package main
 
 import (
-	// "net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +13,6 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// WebSocket endpoint
 	r.GET("/ws", func(c *gin.Context) {
 		handleConnections(c.Writer, c.Request)
 	})
