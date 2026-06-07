@@ -5,12 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"multisync-backend/browser"
+	"multisync-backend/commands"
 	"multisync-backend/sessions"
 )
 
 func main() {
 
 	r := gin.Default()
+	dispatcher := commands.NewDispatcher()
 
 	// health
 	r.GET("/health", func(c *gin.Context) {
@@ -97,6 +99,30 @@ func main() {
 			"status":    "running",
 		})
 	})
+
+	r.POST("/command", func(c *gin.Context) {
+
+	var cmd commands.Command
+
+	if err := c.BindJSON(&cmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err := dispatcher.Dispatch(cmd)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "executed",
+	})
+})
 
 	r.Run(":8080")
 }

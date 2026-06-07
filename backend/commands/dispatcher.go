@@ -29,7 +29,7 @@ func (d *Dispatcher) Dispatch(cmd Command) error {
 		return errors.New("browser instance not found for session")
 	}
 
-	// 3. Route ONLY (NO EXECUTION YET)
+	// 3. Route ONLY (NO EXECUTION HERE)
 	switch cmd.Type {
 
 	case Navigate:
@@ -55,41 +55,72 @@ func (d *Dispatcher) Dispatch(cmd Command) error {
 	}
 }
 
-// ===============================
-// Handlers (STUB ONLY)
-// ===============================
-
 func (d *Dispatcher) handleNavigate(instance *browser.BrowserInstance, cmd Command) error {
-	_ = instance
-	_ = cmd
-	return nil
+	exec := NewExecutor()
+
+	data, ok := cmd.Data.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid navigate payload")
+	}
+
+	url, _ := data["url"].(string)
+	return exec.Navigate(instance, url)
 }
 
 func (d *Dispatcher) handleReload(instance *browser.BrowserInstance) error {
-	_ = instance
-	return nil
+	exec := NewExecutor()
+	return exec.Reload(instance)
 }
 
 func (d *Dispatcher) handleClick(instance *browser.BrowserInstance, cmd Command) error {
-	_ = instance
-	_ = cmd
-	return nil
+	exec := NewExecutor()
+
+	data, ok := cmd.Data.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid click payload")
+	}
+
+	x, _ := data["x"].(float64)
+	y, _ := data["y"].(float64)
+
+	return exec.Click(instance, x, y)
 }
 
 func (d *Dispatcher) handleType(instance *browser.BrowserInstance, cmd Command) error {
-	_ = instance
-	_ = cmd
-	return nil
+	exec := NewExecutor()
+
+	data, ok := cmd.Data.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid type payload")
+	}
+
+	text, _ := data["text"].(string)
+
+	return exec.Type(instance, text)
 }
 
 func (d *Dispatcher) handleScroll(instance *browser.BrowserInstance, cmd Command) error {
-	_ = instance
-	_ = cmd
-	return nil
+	exec := NewExecutor()
+
+	data, ok := cmd.Data.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid scroll payload")
+	}
+
+	y, _ := data["y"].(float64)
+
+	return exec.Scroll(instance, y)
 }
 
 func (d *Dispatcher) handleEval(instance *browser.BrowserInstance, cmd Command) error {
-	_ = instance
-	_ = cmd
-	return nil
+	exec := NewExecutor()
+
+	data, ok := cmd.Data.(map[string]interface{})
+	if !ok {
+		return errors.New("invalid eval payload")
+	}
+
+	script, _ := data["script"].(string)
+
+	return exec.Eval(instance, script)
 }
