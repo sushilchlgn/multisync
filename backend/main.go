@@ -1,33 +1,10 @@
-// package main
-
-// import (
-// 	"github.com/gin-gonic/gin"
-// )
-
-// func main() {
-// 	go handleMessages()
-
-// 	r := gin.Default()
-
-// 	r.GET("/health", func(c *gin.Context) {
-// 		c.JSON(200, gin.H{"status": "ok"})
-// 	})
-
-// 	r.GET("/ws", func(c *gin.Context) {
-// 		handleConnections(c.Writer, c.Request)
-// 	})
-
-// 	r.Run(":8080")
-// }
-
 package main
 
 import (
 	"net/http"
 
-	// "sessions"
-
 	"github.com/gin-gonic/gin"
+	"multisync-backend/browser"
 	"multisync-backend/sessions"
 )
 
@@ -75,6 +52,42 @@ func main() {
 		c.JSON(200, gin.H{
 			"deleted": id,
 		})
+	})
+
+	r.POST("/sessions/:id/start", func(c *gin.Context) {
+
+		id := c.Param("id")
+
+		instance := browser.Start(id)
+
+		c.JSON(200, instance)
+	})
+
+	r.POST("/sessions/:id/stop", func(c *gin.Context) {
+
+		id := c.Param("id")
+
+		browser.Stop(id)
+
+		c.JSON(200, gin.H{
+			"stopped": id,
+		})
+	})
+
+	r.GET("/sessions/:id/browser", func(c *gin.Context) {
+
+		id := c.Param("id")
+
+		instance, exists := browser.Get(id)
+
+		if !exists {
+			c.JSON(404, gin.H{
+				"error": "browser not running",
+			})
+			return
+		}
+
+		c.JSON(200, instance)
 	})
 
 	r.Run(":8080")
