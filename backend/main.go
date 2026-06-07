@@ -12,12 +12,12 @@ func main() {
 
 	r := gin.Default()
 
+	// health
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
+		c.JSON(200, gin.H{"status": "ok"})
 	})
 
+	// create session
 	r.POST("/sessions", func(c *gin.Context) {
 
 		var req struct {
@@ -26,47 +26,54 @@ func main() {
 		}
 
 		if err := c.BindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		session := sessions.CreateSession(
-			req.Name,
-			req.Device,
-		)
 
+		session := sessions.CreateSession(req.Name, req.Device)
 		c.JSON(200, session)
 	})
 
+	// list sessions
 	r.GET("/sessions", func(c *gin.Context) {
 		c.JSON(200, sessions.GetSessions())
 	})
 
+	// delete session
 	r.DELETE("/sessions/:id", func(c *gin.Context) {
-
 		id := c.Param("id")
-
 		sessions.DeleteSession(id)
 
-		c.JSON(200, gin.H{
-			"deleted": id,
-		})
+		browser.Stop(id)
+
+		c.JSON(200, gin.H{"deleted": id})
 	})
 
+	// START browser (Phase 4.3 core)
 	r.POST("/sessions/:id/start", func(c *gin.Context) {
 
 		id := c.Param("id")
 
-		instance := browser.Start(id)
+		instance, err := browser.Start(id)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error":   "failed to start browser",
+				"details": err.Error(),
+			})
+			return
+		}
 
-		c.JSON(200, instance)
+		c.JSON(200, gin.H{
+			"sessionId": instance.SessionID,
+			"status":    "running",
+			"ready":     true,
+		})
 	})
 
+	// STOP browser
 	r.POST("/sessions/:id/stop", func(c *gin.Context) {
 
 		id := c.Param("id")
-
 		browser.Stop(id)
 
 		c.JSON(200, gin.H{
@@ -74,20 +81,21 @@ func main() {
 		})
 	})
 
+	// GET browser instance
 	r.GET("/sessions/:id/browser", func(c *gin.Context) {
 
 		id := c.Param("id")
 
 		instance, exists := browser.Get(id)
-
 		if !exists {
-			c.JSON(404, gin.H{
-				"error": "browser not running",
-			})
+			c.JSON(404, gin.H{"error": "browser not running"})
 			return
 		}
 
-		c.JSON(200, instance)
+		c.JSON(200, gin.H{
+			"sessionId": instance.SessionID,
+			"status":    "running",
+		})
 	})
 
 	r.Run(":8080")
